@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:login_signup/validation.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -8,6 +9,8 @@ class SignupPage extends StatefulWidget {
 }
 
 class SignupPageState extends State<SignupPage> {
+  final _formState = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -68,21 +71,19 @@ class SignupPageState extends State<SignupPage> {
               const SizedBox(
                 height: 85,
               ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 50),
-                child: AnimatedContainer(
-                  duration: const Duration(seconds: 2),
+              Form(
+                key: _formState,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.1),
                   child: Column(
                     children: [
                       _CustomTextBox(
                           icon: Icons.abc_outlined,
                           text: "Name",
-                          onSubmit: (value) {
-                            if ((value.length) < 3) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          "name must me 3 character long")));
+                          validate: (value) {
+                            if (!value!.isValidName) {
+                              return "Enter valid name";
                             }
                           }),
                       const SizedBox(
@@ -92,15 +93,9 @@ class SignupPageState extends State<SignupPage> {
                           keyboardtype: TextInputType.emailAddress,
                           icon: Icons.email_outlined,
                           text: "Email",
-                          onSubmit: (value) {
-                            String email = "@";
-                            String email2 = ".com";
-                            if ((!value.contains(email)) &&
-                                (!value.contains(email2))) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                      content: Text(
-                                          "email must be contain @ & .com")));
+                          validate: (value) {
+                            if (!value!.isValidEmail) {
+                              return "Enter valid email";
                             }
                           }),
                       const SizedBox(
@@ -109,14 +104,22 @@ class SignupPageState extends State<SignupPage> {
                       _CustomTextBox(
                           icon: Icons.lock_outline,
                           text: "Password",
-                          onSubmit: (value) {}),
+                          validate: (value) {
+                            if (!value!.isValidPassword) {
+                              return "Enter valid password";
+                            }
+                          }),
                       const SizedBox(
                         height: 30,
                       ),
                       _CustomTextBox(
                           icon: Icons.lock_outline,
                           text: "Confirm Password",
-                          onSubmit: (value) {}),
+                          validate: (value) {
+                            if (!value!.isValidPassword) {
+                              return "Enter valid password";
+                            }
+                          }),
                       const SizedBox(
                         height: 80,
                       ),
@@ -131,11 +134,14 @@ class SignupPageState extends State<SignupPage> {
                                 "Login",
                                 style: Theme.of(context).textTheme.labelSmall,
                               )),
-                          const CircleAvatar(
-                            backgroundColor: Color(0x8AFFFFFF),
+                          CircleAvatar(
+                            backgroundColor: const Color(0x8AFFFFFF),
                             child: IconButton(
-                                icon: Icon(Icons.arrow_forward),
-                                onPressed: null),
+                              icon: const Icon(Icons.arrow_forward),
+                              onPressed: () {
+                                _formState.currentState!.validate();
+                              },
+                            ),
                           ),
                         ],
                       ),
@@ -155,20 +161,26 @@ class SignupPageState extends State<SignupPage> {
 
   Widget _CustomTextBox(
       {TextInputType? keyboardtype = TextInputType.name,
-      required Function(String) onSubmit,
+      required String? Function(String?)? validate,
       required IconData icon,
       var text,
       bool obscureText = false}) {
-    return TextField(
+    return TextFormField(
       keyboardType: keyboardtype,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(height: 1.5),
       cursorColor: Colors.white54,
-      onSubmitted: onSubmit,
+      validator: validate,
       obscureText: obscureText,
       decoration: InputDecoration(
         enabledBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(color: Colors.white54)),
+        errorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: Colors.redAccent)),
+        focusedErrorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: Colors.redAccent)),
         focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(color: Colors.white54)),

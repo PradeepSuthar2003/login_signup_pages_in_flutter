@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:login_signup/LoginModel.dart';
+import 'package:login_signup/validation.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -11,6 +12,8 @@ class LoginPage extends StatefulWidget {
 class _MyHomePageState extends State<LoginPage> {
   FocusNode emailfocusNode = FocusNode();
   FocusNode passfocusNode = FocusNode();
+  final _formState = GlobalKey<FormState>();
+
   @override
   Widget build(BuildContext context) {
     var email = TextEditingController();
@@ -77,71 +80,85 @@ class _MyHomePageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(
-                height: 35,
+                height: 65,
               ),
-              Container(
-                padding: const EdgeInsets.all(50),
-                child: Column(
-                  children: [
-                    _CustomTextBox(
-                        focusNode: emailfocusNode,
-                        inputType: TextInputType.emailAddress,
-                        controller: email,
-                        onSubmit: (value) {},
-                        icon: Icons.email_outlined,
-                        text: "Email"),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    _CustomTextBox(
-                        focusNode: passfocusNode,
-                        controller: password,
-                        onSubmit: (value) {},
-                        icon: Icons.lock_outline,
-                        text: "Password",
-                        obscureText: true),
-                    const SizedBox(
-                      height: 20,
-                    ),
-                    const SizedBox(
-                      height: 60,
-                    ),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        TextButton(
-                            onPressed: () {
-                              Navigator.pushNamed(context, 'signup');
-                              emailfocusNode.unfocus();
-                              passfocusNode.unfocus();
-                            },
-                            child: Text(
-                              "Signup",
-                              style: Theme.of(context).textTheme.labelSmall,
-                            )),
-                        CircleAvatar(
-                          backgroundColor: const Color(0x8AFFFFFF),
-                          child: IconButton(
-                              icon: const Icon(Icons.arrow_forward),
+              Form(
+                key: _formState,
+                child: Container(
+                  padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.of(context).size.width * 0.1),
+                  child: Column(
+                    children: [
+                      _CustomTextBox(
+                          focusNode: emailfocusNode,
+                          inputType: TextInputType.emailAddress,
+                          controller: email,
+                          validate: (value) {
+                            if (!value!.isValidEmail) {
+                              return "Enter valid email";
+                            }
+                          },
+                          icon: Icons.email_outlined,
+                          text: "Email"),
+                      const SizedBox(
+                        height: 30,
+                      ),
+                      _CustomTextBox(
+                          focusNode: passfocusNode,
+                          controller: password,
+                          validate: (value) {
+                            if (!value!.isValidPassword) {
+                              return "Enter valid password";
+                            }
+                          },
+                          icon: Icons.lock_outline,
+                          text: "Password",
+                          obscureText: true),
+                      const SizedBox(
+                        height: 20,
+                      ),
+                      const SizedBox(
+                        height: 60,
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          TextButton(
                               onPressed: () {
-                                if (password.text.toString() == "123") {
-                                  Navigator.pushNamed(context, 'home',
-                                      arguments: LoginData(
-                                          email: email.text.toString(),
-                                          password: password.text.toString()));
-                                          emailfocusNode.unfocus();
-                                          passfocusNode.unfocus();
-                                } else {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content: Text(
-                                              "Incorrect password or username")));
-                                }
-                              }),
-                        ),
-                      ],
-                    )
-                  ],
+                                Navigator.pushNamed(context, 'signup');
+                                emailfocusNode.unfocus();
+                                passfocusNode.unfocus();
+                              },
+                              child: Text(
+                                "Signup",
+                                style: Theme.of(context).textTheme.labelSmall,
+                              )),
+                          CircleAvatar(
+                            backgroundColor: const Color(0x8AFFFFFF),
+                            child: IconButton(
+                                icon: const Icon(Icons.arrow_forward),
+                                onPressed: () {
+                                  _formState.currentState?.validate();
+                                  if (password.text.toString() == "123") {
+                                    Navigator.pushNamed(context, 'home',
+                                        arguments: LoginData(
+                                            email: email.text.toString(),
+                                            password:
+                                                password.text.toString()));
+                                    emailfocusNode.unfocus();
+                                    passfocusNode.unfocus();
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(
+                                            content: Text(
+                                                "Incorrect password or username")));
+                                  }
+                                }),
+                          ),
+                        ],
+                      )
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -155,15 +172,15 @@ class _MyHomePageState extends State<LoginPage> {
       {FocusNode? focusNode,
       TextInputType? inputType = TextInputType.name,
       TextEditingController? controller,
-      required Function(String) onSubmit,
+      required String? Function(String?)? validate,
       required IconData icon,
       var text,
       bool obscureText = false}) {
-    return TextField(
+    return TextFormField(
       keyboardType: inputType,
       focusNode: focusNode,
       controller: controller,
-      onSubmitted: onSubmit,
+      validator: validate,
       style: Theme.of(context).textTheme.labelSmall?.copyWith(height: 1.5),
       cursorColor: Colors.white54,
       obscureText: obscureText,
@@ -171,6 +188,12 @@ class _MyHomePageState extends State<LoginPage> {
         enabledBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(color: Colors.white54)),
+        errorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: Colors.redAccent)),
+        focusedErrorBorder: const OutlineInputBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+            borderSide: BorderSide(color: Colors.red)),
         focusedBorder: const OutlineInputBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
             borderSide: BorderSide(color: Colors.white54)),
